@@ -72,17 +72,26 @@ function updateModeUI() {
   modePill.classList.toggle('neural', neural);
   modePill.classList.toggle('reference', reference);
   modePillLabel.textContent = MODE_LABELS[state.mode] || MODE_LABELS.classic;
-  modeSwitch.querySelectorAll('button').forEach(btn => {
+  const buttons = Array.from(modeSwitch.querySelectorAll('button'));
+  buttons.forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === state.mode);
   });
+  const index = Math.max(0, buttons.findIndex(btn => btn.dataset.mode === state.mode));
+  modeSwitch.style.setProperty('--mode-index', index);
   modeHint.textContent = MODE_HINTS[state.mode] || MODE_HINTS.classic;
 }
 
 function setMode(mode, silent) {
   if (!MODES.includes(mode)) return;
+  if (state.mode === mode) return;
   state.mode = mode;
   store.set('ks_mode', mode);
   updateModeUI();
+  modeSwitch.classList.remove('is-moving');
+  void modeSwitch.offsetWidth;
+  modeSwitch.classList.add('is-moving');
+  clearTimeout(modeSwitch._moveTimer);
+  modeSwitch._moveTimer = setTimeout(() => modeSwitch.classList.remove('is-moving'), 560);
   if (mode === 'reference') checkKnowledge();
   else checkOllama();
   if (!silent) {
